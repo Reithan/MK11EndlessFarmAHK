@@ -267,7 +267,7 @@ Loop {
 		continue
 	}
 
-	ImageSearch, OutputVarX, OutputVarY, 1660, 940, 1760, 1010, *0 HBITMAP:*%mainMenuBadge%
+	ImageSearch, OutputVarX, OutputVarY, 920, 1010, 1010, 1070, *60 HBITMAP:*%mainMenuBadge%
 	IsMainMenu := ErrorLevel = 0
 	if (IsMainMenu) {
 		ImageSearch, OutputVarX, OutputVarY, 335, 120, 485, 160, *0 HBITMAP:*%konquerHeader%
