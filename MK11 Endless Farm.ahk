@@ -48,8 +48,11 @@ kombatKardFooter := LoadPicture("ImageKeys\KOMBAT KARD Footer.png")
 endlessHeader := LoadPicture("ImageKeys\ENDLESS Header.png")
 loadingBarTip := LoadPicture("ImageKeys\LOADING BAR tip.png")
 konquerHeader := LoadPicture("ImageKeys\KONQUER Header.png")
+notKonquerHeader := LoadPicture("ImageKeys\NOT KONQUER Header.png")
+konquerBadge := LoadPicture("ImageKeys\KONQUER Badge.png")
 mainMenuBadge := LoadPicture("ImageKeys\MAIN MENU Badge.png")
 towersBadge := LoadPicture("ImageKeys\TOWERS Badge.png")
+pressAnyBadge := LoadPicture("ImageKeys\PRESS ANY Badge.png")
 
 ; Setup GUI
 Gui, StatusGui:New, +AlwaysOnTop -Caption +Disabled +ToolWindow
@@ -66,7 +69,7 @@ Gui, TooltipGui:Add, Text, , F3: Toggle Script`nF4: Quit
 guiActive := true
 WasMatchLoading := false
 IsMatchStarted := false
-IsEnabled := false
+IsEnabled := true
 MatchesPlayed := 0
 Wins := 0
 Losses := 0
@@ -105,6 +108,12 @@ Loop {
 	}
 	
 	CoordMode, Pixel, Relative
+	; Get the mouse out of the way
+	MouseGetPos, mouseX, mouseY
+	if(mouseX != 1920 || mouseY != 1080) {
+		MouseMove, 1920, 1080, 0
+		Sleep, 33
+	}
 	
 	; Skipping rewards doesn't work right now
 	;ImageSearch, OutputVarX, OutputVarY, 250, 1000, 450, 1050, *0 HBITMAP:*%skipRewardsButton%
@@ -265,8 +274,6 @@ Loop {
 		OnKonquer := ErrorLevel = 0
 		if (OnKonquer) {
 			ImageSearch, OutputVarX, OutputVarY, 1050, 600, 1240, 655, *100 HBITMAP:*%towersBadge%
-			if (ErrorLevel = 2)
-				MsgBox Oops
 			OnTowers := ErrorLevel = 0
 			if (OnTowers) {
 				Send, {Enter down}
@@ -278,16 +285,45 @@ Loop {
 				Send, {Right down}
 				Sleep, 33
 				Send, {Right up}
-				Sleep, 500
+				Sleep, 2000
 				continue
 			}
-		} else {
+		}
+		ImageSearch, OutputVarX, OutputVarY, 335, 120, 485, 160, *0 HBITMAP:*%notKonquerHeader%
+		OffKonquer := ErrorLevel = 0
+		if (OffKonquer) {
 			Send, {Q down}
 			Sleep, 33
 			Send, {Q up}
 			Sleep, 33
 			continue
+		}	
+		ImageSearch, OutputVarX, OutputVarY, 375, 600, 545, 655, *100 HBITMAP:*%konquerBadge%
+		OnKonquerTile := ErrorLevel = 0
+		if (OnKonquerTile) {
+			Send, {Enter down}
+			Sleep, 33
+			Send, {Enter up}
+			Sleep, 33
+			continue
+		} else {
+			Send, {Right down}
+			Sleep, 33
+			Send, {Right up}
+			Sleep, 2000
+			continue
 		}
+		continue
+	}
+
+	ImageSearch, OutputVarX, OutputVarY, 920, 640, 1010, 840, *100 HBITMAP:*%pressAnyBadge%
+	IsPressAny := ErrorLevel = 0
+	if (IsPressAny) {
+		Send, {Enter down}
+		Sleep, 33
+		Send, {Enter up}
+		Sleep, 2000
+		continue
 	}
 }
 
