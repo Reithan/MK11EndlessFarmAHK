@@ -77,6 +77,9 @@ Run := 0
 BestRun := 0
 
 Loop {
+	if(Run > BestRun) {
+		BestRun := Run
+	}
 	winsAndLosses := "(" . Wins . ":" . Losses . ")"
 	args := [MatchesPlayed, winsAndLosses, Run, BestRun]
 	statusText := "Matches Played " . Format("{:4d} {:-11s}`n" . (IsEnabled ? "[Enabled]" : "[Disabled]") . " Run {:4d}  |  Best {:4d}", args*)
@@ -176,9 +179,6 @@ Loop {
 		if (IsMatchStarted) {
 			++Losses
 			++MatchesPlayed
-			if(Run > BestRun) {
-				BestRun := Run
-			}
 			Run = 0
 			IsMatchStarted := false
 		}
