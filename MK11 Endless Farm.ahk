@@ -107,6 +107,10 @@ Loop {
 		if (!WinActive("Mortal Kombat 11")) {
 			Process, Exist, Mortal Kombat 11
 			if (!ErrorLevel && FileExist("MK11.lnk")) {
+				WasMatchLoading := false
+				IsMatchStarted := false
+				Run := 0
+				Sleep, 5000
 				Run, MK11.lnk
 				Process, Wait, Mortal Kombat 11, 10
 			}
