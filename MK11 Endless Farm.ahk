@@ -105,7 +105,11 @@ Loop {
 	if (!WinActive("Mortal Kombat 11")) {
 		WinActivate Mortal Kombat 11
 		if (!WinActive("Mortal Kombat 11")) {
-			IsEnabled = false
+			Process, Exist, Mortal Kombat 11
+			if (!ErrorLevel && FileExist("MK11.lnk")) {
+				Run, MK11.lnk
+				Process, Wait, Mortal Kombat 11, 10
+			}
 			continue
 		}
 	}
