@@ -133,8 +133,12 @@ Loop {
 		if (!WinActive("Mortal Kombat 11")) {
 			Process, Exist, Mortal Kombat 11
 			if (!ErrorLevel && FileExist("MK11.lnk")) {
+				; Reset states
 				WasMatchLoading := false
 				IsMatchStarted := false
+				; Zero out current run
+				MatchesPlayed -= Run
+				Wins -= Run
 				Run := 0
 				Sleep, 5000
 				Run, MK11.lnk
