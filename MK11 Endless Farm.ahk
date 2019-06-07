@@ -240,8 +240,7 @@ Loop {
 	}
 	WasMatchLoading := IsMatchLoading
 
-	CanKontinue := ScreenChecks["kontinueButton2"].check() || ScreenChecks["kontinueButton3"].check() || ScreenChecks["kontinueButton1"].check()
-	if (CanKontinue) {
+	if (ScreenChecks["kontinueButton2"].check() || ScreenChecks["kontinueButton3"].check() || ScreenChecks["kontinueButton1"].check()) {
 		sendKeyPress("Enter")
 		Sleep, 500
 		continue
