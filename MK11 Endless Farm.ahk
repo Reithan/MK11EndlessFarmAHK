@@ -35,24 +35,50 @@ charName := file.ReadLine()
 charBuild := file.ReadInt() - 49
 
 ; Pre-Load Images for Search
-;skipRewardsButton := LoadPicture("ImageKeys\SKIP REWARDS Button.png")
-skipButton := LoadPicture("ImageKeys\SKIP Button.png")
-pauseHeader := LoadPicture("ImageKeys\PAUSE Header.png")
-kontinueButton1 := LoadPicture("ImageKeys\KONTINUE Button1.png")
-kontinueButton2 := LoadPicture("ImageKeys\KONTINUE Button2.png")
-kontinueButton3 := LoadPicture("ImageKeys\KONTINUE Button3.png")
-vsBadge := LoadPicture("ImageKeys\VS Badge.png")
-klassicHeader1 := LoadPicture("ImageKeys\KLASSIC Header1.png")
-klassicHeader2 := LoadPicture("ImageKeys\KLASSIC Header2.png")
-kombatKardFooter := LoadPicture("ImageKeys\KOMBAT KARD Footer.png")
-endlessHeader := LoadPicture("ImageKeys\ENDLESS Header.png")
-loadingBarTip := LoadPicture("ImageKeys\LOADING BAR tip.png")
-konquerHeader := LoadPicture("ImageKeys\KONQUER Header.png")
-notKonquerHeader := LoadPicture("ImageKeys\NOT KONQUER Header.png")
-konquerBadge := LoadPicture("ImageKeys\KONQUER Badge.png")
-mainMenuBadge := LoadPicture("ImageKeys\MAIN MENU Badge.png")
-towersBadge := LoadPicture("ImageKeys\TOWERS Badge.png")
-pressAnyBadge := LoadPicture("ImageKeys\PRESS ANY Badge.png")
+class ScreenCheck
+{
+	__New(file, coords, range := 0)
+	{
+		this.pngHandle := LoadPicture(file)
+		this.screenCoords := coords
+		this.shadeRange := range
+		return this
+	}
+	
+	check()
+	{
+		CoordMode, Pixel, Relative
+		ImageSearch, OutputVarX, OutputVarY, this.screenCoords[1], this.screenCoords[2], this.screenCoords[3], this.screenCoords[4], % "*" . this.shadeRange . " HBITMAP:*" . this.pngHandle
+		if(ErrorLevel = 2)
+			MsgBox IMAGESEARCH ERROR!
+		return ErrorLevel = 0
+	}
+	
+	pngHandle := 0
+	screenCoords := [0,0,0,0]
+	shadeRange := 0
+}
+
+
+ScreenChecks := {}
+ScreenChecks["skipRewardsButton"] := new ScreenCheck("ImageKeys\SKIP REWARDS Button.png", [250, 1000, 450, 1050])
+ScreenChecks["skipButton"] := new ScreenCheck("ImageKeys\SKIP Button.png", [960, 1020, 1060, 1070])
+ScreenChecks["pauseHeader"] := new ScreenCheck("ImageKeys\PAUSE Header.png", [230, 110, 500, 175])
+ScreenChecks["kontinueButton1"] := new ScreenCheck("ImageKeys\KONTINUE Button1.png", [800, 825, 1130, 1010], 60)
+ScreenChecks["kontinueButton2"] := new ScreenCheck("ImageKeys\KONTINUE Button2.png", [910, 1020, 1090, 1065])
+ScreenChecks["kontinueButton3"] := new ScreenCheck("ImageKeys\KONTINUE Button3.png", [910, 1020, 1070, 1065])
+ScreenChecks["vsBadge"] := new ScreenCheck("ImageKeys\VS Badge.png", [525, 725, 675, 875])
+ScreenChecks["klassicHeader1"] := new ScreenCheck("ImageKeys\KLASSIC Header1.png", [130, 20, 300, 80])
+ScreenChecks["klassicHeader2"] := new ScreenCheck("ImageKeys\KLASSIC Header2.png", [130, 20, 300, 80])
+ScreenChecks["kombatKardFooter"] := new ScreenCheck("ImageKeys\KOMBAT KARD Footer.png", [155, 1030, 360, 1080])
+ScreenChecks["endlessHeader"] := new ScreenCheck("ImageKeys\ENDLESS Header.png", [1570, 110, 1700, 150])
+ScreenChecks["loadingBarTip"] := new ScreenCheck("ImageKeys\LOADING BAR tip.png", [500, 850, 600, 1080])
+ScreenChecks["konquerHeader"] := new ScreenCheck("ImageKeys\KONQUER Header.png", [335, 120, 485, 160])
+ScreenChecks["notKonquerHeader"] := new ScreenCheck("ImageKeys\NOT KONQUER Header.png", [335, 120, 485, 160])
+ScreenChecks["konquerBadge"] := new ScreenCheck("ImageKeys\KONQUER Badge.png", [375, 600, 545, 655], 100)
+ScreenChecks["mainMenuBadge"] := new ScreenCheck("ImageKeys\MAIN MENU Badge.png", [920, 1010, 1010, 1070], 60)
+ScreenChecks["towersBadge"] := new ScreenCheck("ImageKeys\TOWERS Badge.png", [1050, 600, 1240, 655], 100)
+ScreenChecks["pressAnyBadge"] := new ScreenCheck("ImageKeys\PRESS ANY Badge.png", [920, 640, 1010, 840], 100)
 
 ; Setup GUI
 Gui, StatusGui:New, +AlwaysOnTop -Caption +Disabled +ToolWindow
@@ -126,39 +152,25 @@ Loop {
 		Sleep, 33
 	}
 	
-	; Skipping rewards doesn't work right now
-	;ImageSearch, OutputVarX, OutputVarY, 250, 1000, 450, 1050, *0 HBITMAP:*%skipRewardsButton%
-	;CanSkipRewards := ErrorLevel = 0
-	;
-	;if (CanSkipRewards) {
-	;	Send, {J down}
-	;	Sleep, 33
-	;	Send, {J up}
-	;	Sleep, 500
-	;   continue
-	;}
+	; Can we skip rewards
+	if (ScreenChecks["skipRewardsButton"].check()) {
+		sendKeyPress("J")
+		Sleep, 500
+	   continue
+	}
 	
-	ImageSearch, OutputVarX, OutputVarY, 960, 1020, 1060, 1070, *0 HBITMAP:*%skipButton%
-	CanSkip := ErrorLevel = 0
-	
-	if (CanSkip) {
-		Send, {Enter down}
-		Sleep, 33
-		Send, {Enter up}
-		Sleep, 33
+	; Can we skip to kontinue
+	if (ScreenChecks["skipButton"].check()) {
+		sendKeyPress("Enter")
 		continue
 	}
 
-	ImageSearch, OutputVarX, OutputVarY, 525, 725, 675, 875, *0 HBITMAP:*%vsBadge%
-	IsTowerActive := ErrorLevel = 0
-
-	if (IsTowerActive) {
+	; Are we on the tower climb screen
+	if (ScreenChecks["vsBadge"].check()) {
 		; delay to ensure input is active
 		Sleep, 500
 		; Start Tower Fight
-		Send, {Enter down}
-		Sleep, 33
-		Send, {Enter up}
+		sendKeyPress("Enter")
 		Sleep, 500
 		if (IsMatchStarted) {
 			++Wins
@@ -170,18 +182,14 @@ Loop {
 	}
 	
 	InCharSelect := false
-	ImageSearch, OutputVarX, OutputVarY, 130, 20, 300, 80, *0 HBITMAP:*%klassicHeader1%
-	InKlassicMenu := ErrorLevel = 0
+	InKlassicMenu := ScreenChecks["klassicHeader1"].check()
 	if (!InKlassicMenu) {
-		ImageSearch, OutputVarX, OutputVarY, 130, 20, 300, 80, *0 HBITMAP:*%klassicHeader2%
-		InKlassicMenu := ErrorLevel = 0
+		InKlassicMenu := ScreenChecks["klassicHeader2"].check()
 		if(InKlassicMenu) {
-			ImageSearch, OutputVarX, OutputVarY, 155, 1030, 360, 1080, *0 HBITMAP:*%kombatKardFooter%
-			InCharSelect := ErrorLevel != 0	
+			InCharSelect := !ScreenChecks["kombatKardFooter"].check()
 		}
 	}
-	ImageSearch, OutputVarX, OutputVarY, 1570, 110, 1700, 150, *0 HBITMAP:*%endlessHeader%
-	InEndlessTower := InKlassicMenu && ErrorLevel = 0
+	InEndlessTower := InKlassicMenu && ScreenChecks["endlessHeader"].check()
 	
 	if (InKlassicMenu) {
 		if (IsMatchStarted) {
@@ -193,62 +201,38 @@ Loop {
 		if (!InEndlessTower) {
 			if (InCharSelect) {
 				; Wrong tower selected
-				Send, {Esc down}
-				Sleep, 33
-				Send, {Esc up}
+				sendKeyPress("Esc")
 				Sleep, 2000
 				continue
 			} else {
 				; Wrong tower hovered
-				Send, {Left down}
-				Sleep, 33
-				Send, {Left up}
-				Sleep, 33
+				sendKeyPress("Left")
 				continue
 			}
 		} else if (!InCharSelect) {
-			Send, {Enter down}
-			Sleep, 33
-			Send, {Enter up}
+			sendKeyPress("Enter")
 			Sleep, 1000
 			continue
 		} else {
 			selectCharacter(charName, charBuild)
-			; Turn on AI
-			Send, {A down}
-			Sleep, 33
-			Send, {A up}
-			Sleep, 33
-			; Lock In
-			Send, {Enter down}
-			Sleep, 33
-			Send, {Enter up}
 			; Delay for initial Tower loading
 			Sleep, 2000
 			continue
 		}
 	}	
 
-	ImageSearch, OutputVarX, OutputVarY, 230, 110, 500, 175, *0 HBITMAP:*%pauseHeader%
-	IsPaused := ErrorLevel = 0
-	
-	if (IsPaused) {
-		Send, {Esc down}
-		Sleep, 33
-		Send, {Esc up}
+	; Is the game paused
+	if (ScreenChecks["pauseHeader"].check()) {
+		sendKeyPress("Esc")
 		Sleep, 500
 		continue
 	}
 	
-	ImageSearch, OutputVarX, OutputVarY, 500, 850, 600, 1080, *0 HBITMAP:*%loadingBarTip%
-	IsMatchLoading := ErrorLevel = 0
-	
+	IsMatchLoading := ScreenChecks["loadingBarTip"].check()
 	if (!IsMatchLoading && WasMatchLoading) {
 		Sleep, 2000
 		; Skip Intros
-		Send, {Enter down}
-		Sleep, 33
-		Send, {Enter up}
+		sendKeyPress("Enter")
 		Sleep, 500
 		IsMatchStarted := true
 		WasMatchLoading := false
@@ -256,80 +240,43 @@ Loop {
 	}
 	WasMatchLoading := IsMatchLoading
 
-	ImageSearch, OutputVarX, OutputVarY, 910, 1020, 1090, 1065, *0 HBITMAP:*%kontinueButton2%
-	CanKontinue := ErrorLevel = 0
-	if(!CanKontinue) {
-		ImageSearch, OutputVarX, OutputVarY, 910, 1020, 1070, 1065, *0 HBITMAP:*%kontinueButton3%
-		CanKontinue := ErrorLevel = 0
-	}
-	if(!CanKontinue) {
-		ImageSearch, OutputVarX, OutputVarY, 800, 825, 1130, 1010, *60 HBITMAP:*%kontinueButton1%
-		CanKontinue := ErrorLevel = 0
-	}	
-	
+	CanKontinue := ScreenChecks["kontinueButton2"].check() || ScreenChecks["kontinueButton3"].check() || ScreenChecks["kontinueButton1"].check()
 	if (CanKontinue) {
-		Send, {Enter down}
-		Sleep, 33
-		Send, {Enter up}
+		sendKeyPress("Enter")
 		Sleep, 500
 		continue
 	}
 
-	ImageSearch, OutputVarX, OutputVarY, 920, 1010, 1010, 1070, *60 HBITMAP:*%mainMenuBadge%
-	IsMainMenu := ErrorLevel = 0
-	if (IsMainMenu) {
-		ImageSearch, OutputVarX, OutputVarY, 335, 120, 485, 160, *0 HBITMAP:*%konquerHeader%
-		OnKonquer := ErrorLevel = 0
-		if (OnKonquer) {
-			ImageSearch, OutputVarX, OutputVarY, 1050, 600, 1240, 655, *100 HBITMAP:*%towersBadge%
-			OnTowers := ErrorLevel = 0
-			if (OnTowers) {
-				Send, {Enter down}
-				Sleep, 33
-				Send, {Enter up}
-				Sleep, 33
+	if (ScreenChecks["mainMenuBadge"].check()) {
+		if (ScreenChecks["konquerHeader"].check()) {
+			if (ScreenChecks["towersBadge"].check()) {
+				sendKeyPress("Enter")
+				Sleep, 500
 				continue
 			} else {
-				Send, {Right down}
-				Sleep, 33
-				Send, {Right up}
-				Sleep, 2000
+				sendKeyPress("Right")
+				Sleep, 750
 				continue
 			}
 		}
-		ImageSearch, OutputVarX, OutputVarY, 335, 120, 485, 160, *0 HBITMAP:*%notKonquerHeader%
-		OffKonquer := ErrorLevel = 0
-		if (OffKonquer) {
-			Send, {Q down}
-			Sleep, 33
-			Send, {Q up}
-			Sleep, 33
+		if (ScreenChecks["notKonquerHeader"].check()) {
+			sendKeyPress("Q")
 			continue
 		}	
-		ImageSearch, OutputVarX, OutputVarY, 375, 600, 545, 655, *100 HBITMAP:*%konquerBadge%
-		OnKonquerTile := ErrorLevel = 0
-		if (OnKonquerTile) {
-			Send, {Enter down}
-			Sleep, 33
-			Send, {Enter up}
-			Sleep, 33
+		if (ScreenChecks["konquerBadge"].check()) {
+			sendKeyPress("Enter")
+			Sleep, 500
 			continue
 		} else {
-			Send, {Right down}
-			Sleep, 33
-			Send, {Right up}
-			Sleep, 2000
+			sendKeyPress("Left")
+			Sleep, 750
 			continue
 		}
 		continue
 	}
 
-	ImageSearch, OutputVarX, OutputVarY, 920, 640, 1010, 840, *100 HBITMAP:*%pressAnyBadge%
-	IsPressAny := ErrorLevel = 0
-	if (IsPressAny) {
-		Send, {Enter down}
-		Sleep, 33
-		Send, {Enter up}
+	if (ScreenChecks["pressAnyBadge"].check()) {
+		sendKeyPress("Enter")
 		Sleep, 2000
 		continue
 	}
@@ -342,6 +289,7 @@ F4::ExitApp
 selectCharacter(name, build) {
 	global CharacterSelect
 	
+	; Find character data
 	selected := false
 	StringLower, title_name, name, T
 	Loop, 2 {
@@ -353,38 +301,39 @@ selectCharacter(name, build) {
 		MsgBox ERROR: Unknown Character
 		ExitApp
 	}
+	
+	MsgBox % "Name: " . title_name . "Right: " . selected[1]
+	; Navigate to character
 	Loop % selected[1] {
-		Send, {Right down}
-		Sleep, 33
-		Send, {Right up}
-		Sleep, 33
+		sendKeyPress("Right")
 	}	
 	Loop % selected[2] {
-		Send, {Left down}
-		Sleep, 33
-		Send, {Left up}
-		Sleep, 33
+		sendKeyPress("Left")
 	}	
 	Loop % selected[3] {
-		Send, {Up down}
-		Sleep, 33
-		Send, {Up up}
-		Sleep, 33
+		sendKeyPress("Up")
 	}	
 	Loop % selected[4] {
-		Send, {Down down}
-		Sleep, 33
-		Send, {Down up}
-		Sleep, 33
-	}	
-	Send, {Enter down}
-	Sleep, 33
-	Send, {Enter up}
-	Sleep, 33
-	Loop, %build% {
-		Send, {Right down}
-		Sleep, 33
-		Send, {Right up}
-		Sleep, 33
+		sendKeyPress("Down")
 	}
+	
+	; Select character
+	sendKeyPress("Enter")
+	
+	; Select build
+	Loop, %build% {
+		sendKeyPress("Right")
+	}
+	
+	; Turn on AI
+	sendKeyPress("A")
+	; Lock in
+	sendKeyPress("Enter")
+}
+
+sendKeyPress(key) {
+	Send, {%key% down}
+	Sleep, 33
+	Send, {%key% up}
+	Sleep, 33
 }
