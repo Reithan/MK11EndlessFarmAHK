@@ -50,7 +50,7 @@ class ScreenCheck
 		CoordMode, Pixel, Relative
 		ImageSearch, OutputVarX, OutputVarY, this.screenCoords[1], this.screenCoords[2], this.screenCoords[3], this.screenCoords[4], % "*" . this.shadeRange . " HBITMAP:*" . this.pngHandle
 		if(ErrorLevel = 2)
-			MsgBox IMAGESEARCH ERROR!
+			MsgBox ERROR: ImageSearch Failed!
 		return ErrorLevel = 0
 	}
 	
@@ -305,7 +305,6 @@ selectCharacter(name, build) {
 		ExitApp
 	}
 	
-	MsgBox % "Name: " . title_name . "Right: " . selected[1]
 	; Navigate to character
 	Loop % selected[1] {
 		sendKeyPress("Right")
