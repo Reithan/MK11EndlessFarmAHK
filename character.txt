@@ -1,2 +1,4 @@
-noob
-3
+rand
+0
+rand
+rand
