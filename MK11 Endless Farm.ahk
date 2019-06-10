@@ -118,7 +118,7 @@ ScreenChecks["fightSubmenuHeader"] := new ScreenCheck("ImageKeys\FIGHT SUBMENU H
 ScreenChecks["aiBattleBadge"] := new ScreenCheck("ImageKeys\AI BATTLE Badge.png", [1370, 605, 1535, 650], 100)
 ScreenChecks["aiAttackFinishedHeader"] := new ScreenCheck("ImageKeys\AI ATTACK FINISHED Header.png", [265, 140, 330, 155], 100)
 ScreenChecks["aiBattlesFinishedBadge"] := new ScreenCheck("ImageKeys\AI BATTLES FINISHED Badge.png", [1420, 175, 1480, 210])
-ScreenChecks["retryButton1"] := new ScreenCheck("ImageKeys\RETRY Button1.png", [915, 880, 1005, 940], 60)
+ScreenChecks["retryButton1"] := new ScreenCheck("ImageKeys\RETRY Button1.png", [915, 880, 1005, 940], 100)
 ScreenChecks["towersOfTimeBadge"] := new ScreenCheck("ImageKeys\TOWERS OF TIME Badge.png", [795, 620, 945, 635], 100)
 ScreenChecks["difficultyBadge"] := new ScreenCheck("ImageKeys\DIFFICULTY Badge.png", [865, 755, 1045, 770])
 ScreenChecks["veasyDifficultyBadge"] := new ScreenCheck("ImageKeys\VEASY DIFFICULTY Badge.png", [900, 840, 1020, 855])
@@ -298,7 +298,7 @@ class MainSubmenuState extends State {
 		}
 	}
 	searchCount := 0
-	isAiBattleDone := true ; false
+	isAiBattleDone := false
 }
 
 class KonquerMenuState extends State {
@@ -823,7 +823,7 @@ class StateMachine {
 				MouseMove, 1920, 1080, 0
 				Sleep, 33
 			}
-			
+
 			state := this.Pop()
 			stateReturn := state.runState()
 			if (stateReturn[1]) {
