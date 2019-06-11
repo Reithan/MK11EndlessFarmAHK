@@ -114,7 +114,10 @@ ScreenChecks["pressAnyBadge"] := new ScreenCheck("ImageKeys\PRESS ANY Badge.png"
 ScreenChecks["groupBattleBadge"] := new ScreenCheck("ImageKeys\GROUP BATTLE Badge.png", [860, 305, 1060, 320])
 ScreenChecks["aiToggleBadge"] := new ScreenCheck("ImageKeys\AI TOGGLE Badge.png", [300, 965, 410, 975])
 ScreenChecks["attackingTeamBadge"] := new ScreenCheck("ImageKeys\ATTACKING TEAM Badge.png", [195, 190, 420, 205])
-ScreenChecks["inMatchBadge"] := new ScreenCheck("ImageKeys\IN MATCH Badge.png", [1840, 1000, 1885, 1045], 60)
+ScreenChecks["inMatchBadge1"] := new ScreenCheck("ImageKeys\IN MATCH Badge1.png", [1840, 1000, 1885, 1045], 60)
+ScreenChecks["inMatchBadge2"] := new ScreenCheck("ImageKeys\IN MATCH Badge2.png", [1840, 1000, 1885, 1045], 60)
+ScreenChecks["inMatchBadge3"] := new ScreenCheck("ImageKeys\IN MATCH Badge3.png", [1840, 1000, 1885, 1045], 60)
+ScreenChecks["inMatchBadge4"] := new ScreenCheck("ImageKeys\IN MATCH Badge4.png", [1840, 1000, 1885, 1045], 60)
 ScreenChecks["charSelectBadge"] := new ScreenCheck("ImageKeys\CHAR SELECT Badge.png", [250, 925, 275, 950], 10)
 ScreenChecks["findAiBattleHeader"] := new ScreenCheck("ImageKeys\FIND AI BATTLE Header.png", [280, 180, 395, 205])
 ScreenChecks["selectAiOpponentHeader"] := new ScreenCheck("ImageKeys\SELECT AI OPPONENT Header.png", [840, 105, 1050, 130])
@@ -200,7 +203,12 @@ class UnknownState extends State {
 			return [true, "matchLoading"]
 		}
 		; in match
-		if (ScreenChecks["pauseHeader"]() || ScreenChecks["inMatchBadge"]()) {
+		inMatch := ScreenChecks["pauseHeader"]()
+		inMatch |= ScreenChecks["inMatchBadge1"]()
+		inMatch |= ScreenChecks["inMatchBadge2"]()
+		inMatch |= ScreenChecks["inMatchBadge3"]()
+		inMatch |= ScreenChecks["inMatchBadge4"]()
+		if (inMatch) {
 			thrashKey := 0
 			return [true, "inMatch"]
 		}
@@ -456,13 +464,19 @@ class AIBattleSelectState extends State {
 			this.randMode := -1
 			return [false, ""]
 		}
-		if(this.randMode = -1 && FarmMode = "Rand") {
+		if (!States["mainSubmenu"].isAiBattleDone && ScreenChecks["aiBattlesFinishedBadge"]()) {
+			States["mainSubmenu"].isAiBattleDone := true
+			if (FarmMode = "Rand") {
+				Random, randNum, 0, 1
+				this.randMode := randNum
+			}
+		}
+		if (this.randMode = -1 && States["mainSubmenu"].isAiBattleDone && FarmMode = "Rand") {
 			this.randMode := 1
 		}
-		if (FarmMode != "Aiba" && this.randMode != 1 && ScreenChecks["aiBattlesFinishedBadge"]()) {
+		if (FarmMode != "Aiba" && this.randMode != 1 && States["mainSubmenu"].isAiBattleDone) {
 			this.searchCount := 0
 			this.randMode := -1
-			States["mainSubmenu"].isAiBattleDone := true
 			sendKeyPress("Esc")
 			Sleep, 1000
 			return [false, ""]
@@ -727,6 +741,7 @@ class InMatchState extends State {
 			proccessPostMatch := false
 			; we lost
 			if (ScreenChecks["retryButton1"]() || ScreenChecks["towerSelectButton"]()) {
+				this.uncertainty := 0
 				return [false, ""]
 			}
 
@@ -764,6 +779,34 @@ class InMatchState extends State {
 		
 
 		if(!this.isPostMatch) {
+			matchBadge := ScreenChecks["inMatchBadge1"]()
+			matchBadge |= ScreenChecks["inMatchBadge2"]()
+			matchBadge |= ScreenChecks["inMatchBadge3"]()
+			matchBadge |= ScreenChecks["inMatchBadge4"]()
+			if (matchBadge) { ; check if we see in match badge		
+				this.uncertainty := 0
+			} else if (!ScreenChecks["loadingBarTip"]() && ++this.uncertainty > 10) {
+				; do some quick polling for match badge
+				if (this.uncertainty < 110) {
+					Sleep, 100
+					return [true, ""]
+				}
+				; this isn't an in match state try to quit (might be credits)
+				sendKeyPress("Esc")
+				Sleep, 1000
+				if (ScreenChecks["pauseHeader"]()) {
+					sendKeyPress("Up")
+					Sleep, 100
+					sendKeyPress("Enter")
+					Sleep, 100
+					sendKeyPress("Right")
+					Sleep, 100
+					sendKeyPress("Enter")
+					Sleep, 1000
+				}
+				this.uncertainty := 0
+				return [false, ""]
+			}
 			sendKeyPress("Enter")
 			Sleep, 1000
 		}
@@ -775,10 +818,12 @@ class InMatchState extends State {
 			return [true, ""]
 		} else {
 			this.isPostMatch := false
+			this.uncertainty := 0
 			return [false, ""]
 		}
 	}
 	isPostMatch := false
+	uncertainty := 0
 }
 
 global States := {}
