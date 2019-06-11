@@ -57,6 +57,11 @@ class ScreenCheck extends Functor
 	{
 		this.fileName := file
 		this.pngHandle := LoadPicture(file)
+		if (!this.pngHandle) {
+			MsgBox % "ERROR: Could not load image(" . this.fileName . ")!"
+			MsgBox % "ErrorLevel = " . ErrorLevel
+			ExitApp
+		}
 		this.screenCoords := coords
 		this.shadeRange := range
 		return this
@@ -67,7 +72,7 @@ class ScreenCheck extends Functor
 		CoordMode, Pixel, Relative
 		ImageSearch, OutputVarX, OutputVarY, this.screenCoords[1], this.screenCoords[2], this.screenCoords[3], this.screenCoords[4], % "*" . this.shadeRange . " HBITMAP:*" . this.pngHandle
 		if (ErrorLevel = 2) {
-			MsgBox % "ERROR: ImageSearch Failed(" . this.fileName . "!"
+			MsgBox % "ERROR: ImageSearch Failed(" . this.fileName . ")!"
 			ExitApp
 		}
 		return ErrorLevel = 0
@@ -200,27 +205,9 @@ class UnknownState extends State {
 			return [true, "inMatch"]
 		}
 		; match loss
-		if (ScreenChecks["retryButton1"]() || ScreenChecks["retryButton2"]()) {
+		if (ScreenChecks["retryButton1"]() || ScreenChecks["retryButton2"]() || ScreenChecks["towerSelectButton"]()) {
 			thrashKey := 0
-			sendKeyPress("Up")
-			Sleep, 100
-			sendKeyPress("Enter")
-			Sleep, 100
-			sendKeyPress("Right")
-			Sleep, 100
-			sendKeyPress("Enter")
-			Sleep, 2500
-			return [true, ""]			
-		}
-		if (ScreenChecks["towerSelectButton"]()) {
-			thrashKey := 0
-			sendKeyPress("Enter")
-			Sleep, 100
-			sendKeyPress("Right")
-			Sleep, 100
-			sendKeyPress("Enter")
-			Sleep, 2500
-			return [true, ""]			
+			return [true, "towerRun"]			
 		}
 		; kontinue screen
 		canKontinue := ScreenChecks["kontinueButton3"]()
@@ -229,9 +216,7 @@ class UnknownState extends State {
 		canKontinue |= ScreenChecks["aiAttackFinishedHeader"]()
 		if (canKontinue) {
 			thrashKey := 0
-			sendKeyPress("Enter")
-			Sleep, 1500
-			return [true, ""]
+			return [true, "inMatch"]
 		}
 		; unknown state - try to leave
 		if (this.thrashKey < 2) {
@@ -272,23 +257,30 @@ class MainMenuState extends State {
 class MainSubmenuState extends State {
 	runState() {
 		; determine submenu
-		Random, randNum, 0, 1
-		if (((FarmMode = "Rand" && randNum) || FarmMode != "Aiba" || this.isAiBattleDone) && ScreenChecks["konquerHeader"]()) {
+		if(this.randMode = -1 && FarmMode = "Rand") {
+			Random, randNum, 0, 1
+			this.randMode := randNum
+		}
+		if ((this.randMode = 0 || FarmMode != "Aiba") && this.isAiBattleDone && ScreenChecks["konquerHeader"]()) {
 			this.searchCount := 0
+			this.randMode := -1
 			Sleep, 2500
 			return [true, "konquerMenu"]
 		} 
-		if (((FarmMode = "Rand" && !randNum) || FarmMode = "Aiba" || !this.isAiBattleDone) && ScreenChecks["fightSubmenuHeader"]()) {
+		if ((this.randMode = 1 || FarmMode = "Aiba" || !this.isAiBattleDone) && ScreenChecks["fightSubmenuHeader"]()) {
 			this.searchCount := 0
+			this.randMode := -1
 			Sleep, 2500
 			return [true, "fightMenu"]
 		}
 		if (!ScreenChecks["mainSubmenuBadge"]()) {
 			this.searchCount := 0
+			this.randMode := -1
 			return [false, ""]
 		} else {
 			if (this.searchCount++ = 3) {
 				this.searchCount := 0
+				this.randMode := -1
 				return [false, ""]
 			}
 			; didn't capture submenu, pick a different one
@@ -299,39 +291,53 @@ class MainSubmenuState extends State {
 	}
 	searchCount := 0
 	isAiBattleDone := false
+	randMode := -1
 }
 
 class KonquerMenuState extends State {
 	runState() {
+		if (this.randMode = 0) {
+			this.randMode := -1
+			return [false, ""]
+		}
+		if(this.randMode = -1 && FarmMode = "Rand") {
+			Random, randNum, 1, 10
+			this.randMode := randNum
+		}
 		; navigate to Klassic Towers
-		Random, randNum, 0, 10
-		isKlassicTowerTarget := (FarmMode = "Rand" && randNum > 3)
-		isKlassicTowerTarget |= FarmMode = "Novi"
+		isKlassicTowerTarget := FarmMode = "Novi"
 		isKlassicTowerTarget |= FarmMode = "Warr"
 		isKlassicTowerTarget |= FarmMode = "Cham"
 		isKlassicTowerTarget |= FarmMode = "Surv"		
 		isKlassicTowerTarget |= FarmMode = "Endl"
-		if (!isKlassicTowerTarget && FarmMode != "Time" && !(FarmMode = "Rand" && randNum)) {
+		isKlassicTowerTarget |= this.randMode > 5
+		isKlassicTowerTarget &= States["mainSubmenu"].isAiBattleDone
+		if (!isKlassicTowerTarget && FarmMode != "Time") {
+			this.randMode := 0
 			return [false, ""]
 		}
 		if (isKlassicTowerTarget && ScreenChecks["klassicTowersBadge"]()) {
 			this.searchCount := 0
+			this.randMode := 0
 			sendKeyPress("Enter")
 			Sleep, 3500
 			return [false, "klassicTowers"]
 		}
-		if ((FarmMode = "Time" || (FarmMode = "Rand" && randNum < 4)) && ScreenChecks["towersOfTimeBadge"]()){
+		if ((FarmMode = "Time" || this.randMode < 6) && ScreenChecks["towersOfTimeBadge"]()){
 			this.searchCount := 0
+			this.randMode := 0
 			; sendKeyPress("Enter")
 			; Sleep, 3500
 			; return [false, "towersOfTime"]
-			return [true, ""]
+			return [false, ""]
 		} else if (!ScreenChecks["konquerHeader"]()) {
 			this.searchCount := 0
+			this.randMode := 0
 			return [false, ""]
 		} else {
 			if (this.searchCount++ = 3) {
 				this.searchCount := 0
+				this.randMode := -1
 				return [false, ""]
 			}
 			sendKeyPress("Right")
@@ -340,26 +346,34 @@ class KonquerMenuState extends State {
 		}
 	}
 	searchCount := 0
+	randMode := -1
 }
 
 class FightMenuState extends State {
 	runState() {
-		Random, randNum, 0, 10
-		if (FarmMode != "Aiba" && !(FarmMode = "Rand" && randNum)) {
+		if(this.randMode = -1 && FarmMode = "Rand") {
+			this.randMode := 1
+		}
+		if (FarmMode != "Aiba" && States["mainSubmenu"].isAiBattleDone && this.randMode < 1) {
+			this.searchCount := 0
+			this.randMode := -1
 			return [false, ""]
 		}
 		if (ScreenChecks["aiBattleBadge"]()) {
 			this.searchCount := 0
+			this.randMode := 0
 			sendKeyPress("Enter")
 			Sleep, 3500
 			return [false, "aiBattleSelect"]
 		}
 		if (!ScreenChecks["fightSubmenuHeader"]()) {
 			this.searchCount := 0
+			this.randMode := -1
 			return [false, ""]
 		} else {
 			if (this.searchCount++ = 3) {
 				this.searchCount := 0
+				this.randMode := -1
 				return [false, ""]
 			}
 			sendKeyPress("Left")
@@ -368,6 +382,7 @@ class FightMenuState extends State {
 		}
 	}
 	searchCount := 0
+	randMode := -1
 }
 
 class KlassicTowersState extends State {
@@ -377,26 +392,29 @@ class KlassicTowersState extends State {
 			; not in klassic
 			return [false, ""]
 		} else {
-			Random, randNum, 0, 10
-			isKlassicTowerTarget := (FarmMode = "Rand" && randNum)
-			isKlassicTowerTarget |= FarmMode = "Novi"
+			if(this.randMode = -1 && FarmMode = "Rand") {
+				Random, randNum, 1, 5
+				this.randMode := randNum
+			}
+			isKlassicTowerTarget := FarmMode = "Novi"
 			isKlassicTowerTarget |= FarmMode = "Warr"
 			isKlassicTowerTarget |= FarmMode = "Cham"
 			isKlassicTowerTarget |= FarmMode = "Surv"		
 			isKlassicTowerTarget |= FarmMode = "Endl"
+			isKlassicTowerTarget |= this.randMode > 0
 			isKlassicTowerTarget &= States["mainSubmenu"].isAiBattleDone
 			if (!isKlassicTowerTarget) {
 				this.searchCount := 0
+				this.randMode := -1
 				sendKeyPress("Esc")
 				Sleep, 3500
 				return [false, ""]
 			}
-			correctTower := FarmMode = "Rand" && randNum > 5
-			correctTower |= FarmMode = "Novi" && ScreenChecks["noviceHeader"]()
-			correctTower |= FarmMode = "Warr" && ScreenChecks["warriorHeader"]()
-			correctTower |= FarmMode = "Cham" && ScreenChecks["championHeader"]()
-			correctTower |= FarmMode = "Endl" && ScreenChecks["endlessHeader"]()
-			correctTower |= FarmMode = "Surv" && ScreenChecks["survivorHeader"]()
+			correctTower := (this.randMode = 1 || FarmMode = "Novi") && ScreenChecks["noviceHeader"]()
+			correctTower |= (this.randMode = 2 || FarmMode = "Warr") && ScreenChecks["warriorHeader"]()
+			correctTower |= (this.randMode = 3 || FarmMode = "Cham") && ScreenChecks["championHeader"]()
+			correctTower |= (this.randMode = 4 || FarmMode = "Endl") && ScreenChecks["endlessHeader"]()
+			correctTower |= (this.randMode = 5 || FarmMode = "Surv") && ScreenChecks["survivorHeader"]()
 			if (!correctTower) {
 				if (!ScreenChecks["kombatKardFooter"]()) {
 					; Wrong tower selected
@@ -407,6 +425,7 @@ class KlassicTowersState extends State {
 					; Wrong tower hovered
 					if (this.searchCount++ = 4) {
 						this.searchCount := 0
+						this.randMode := -1
 						return [false, ""]
 					}
 					sendKeyPress("Left")
@@ -414,6 +433,7 @@ class KlassicTowersState extends State {
 				}
 			} else {
 				this.searchCount := 0
+				this.randMode := 0
 				if (ScreenChecks["kombatKardFooter"]()) {
 					Sleep, 250
 					; enter char select
@@ -426,25 +446,31 @@ class KlassicTowersState extends State {
 		}
 	}
 	searchCount := 0
+	randMode := -1
 }
 
 class AIBattleSelectState extends State {
 	runState() {
-		Random, randNum, 0, 1
-		if (FarmMode != "Aiba" && !(FarmMode = "Rand" && randNum) && ScreenChecks["aiBattlesFinishedBadge"]()) {
+		if (!ScreenChecks["aiBattleHeader"]()) {
 			this.searchCount := 0
+			this.randMode := -1
+			return [false, ""]
+		}
+		if(this.randMode = -1 && FarmMode = "Rand") {
+			this.randMode := 1
+		}
+		if (FarmMode != "Aiba" && this.randMode != 1 && ScreenChecks["aiBattlesFinishedBadge"]()) {
+			this.searchCount := 0
+			this.randMode := -1
 			States["mainSubmenu"].isAiBattleDone := true
 			sendKeyPress("Esc")
 			Sleep, 1000
 			return [false, ""]
 		}
-		if (!ScreenChecks["aiBattleHeader"]()) {
-			this.searchCount := 0
-			return [false, ""]
-		}
 		if (!ScreenChecks["findAiBattleHeader"]()) {
 			if (this.searchCount++ = 3) {
 				this.searchCount := 0
+				this.randMode := -1
 				return [false, ""]
 			}
 			if (this.isLeft) {
@@ -456,6 +482,7 @@ class AIBattleSelectState extends State {
 			return [true, ""]
 		} else {
 			this.searchCount := 0
+			this.randMode := 0
 			sendKeyPress("Enter")
 			Sleep, 3500
 			return [true, "selectAiOpponent"]
@@ -463,6 +490,7 @@ class AIBattleSelectState extends State {
 	}
 	isLeft := false
 	searchCount := 0
+	randMode := -1
 }
 
 class SelectAIOpponentState extends State {
@@ -500,14 +528,13 @@ class CharSelectState extends State {
 					; Enter Difficulty
 					Sleep, 1500
 					if (ScreenChecks["difficultyBadge"]()) {
+						Random, randNum, 1, 5
 						Loop {
-							Random, randNum, 0, 5
-							correctDifficulty := Difficulty = "Rand" && !randNum
-							correctDifficulty |= Difficulty = "Veas" && ScreenChecks["veasyDifficultyBadge"]()
-							correctDifficulty |= Difficulty = "Easy" && ScreenChecks["easyDifficultyBadge"]()
-							correctDifficulty |= Difficulty = "Medi" && ScreenChecks["mediumDifficultyBadge"]()
-							correctDifficulty |= Difficulty = "Hard" && ScreenChecks["hardDifficultyBadge"]()
-							correctDifficulty |= Difficulty = "Vhar" && ScreenChecks["vhardDifficultyBadge"]()
+							correctDifficulty := (randNum = 1 || Difficulty = "Veas") && ScreenChecks["veasyDifficultyBadge"]()
+							correctDifficulty |= (randNum = 2 || Difficulty = "Easy") && ScreenChecks["easyDifficultyBadge"]()
+							correctDifficulty |= (randNum = 3 || Difficulty = "Medi") && ScreenChecks["mediumDifficultyBadge"]()
+							correctDifficulty |= (randNum = 4 || Difficulty = "Hard") && ScreenChecks["hardDifficultyBadge"]()
+							correctDifficulty |= (randNum = 5 || Difficulty = "Vhar") && ScreenChecks["vhardDifficultyBadge"]()
 							
 							if (!correctDifficulty) {
 								sendKeyPress("Right")
@@ -655,6 +682,12 @@ class MatchLoadingState extends State {
 			this.IsLoadingStarted := true
 			return [true, ""]
 		}
+		if (ScreenChecks["enableFastForwardBadge"]()) {
+			this.searchCount := 0
+			sendKeyPress("M")
+			Sleep, 100
+			return [true, ""]
+		}
 		if (this.IsLoadingStarted && !ScreenChecks["loadingBarTip"]()) {
 			this.searchCount := 0
 			this.IsLoadingStarted := false
@@ -662,12 +695,6 @@ class MatchLoadingState extends State {
 			Sleep, 2000
 			sendKeyPress("Enter")
 			return [false, "inMatch"]
-		}
-		if (ScreenChecks["enableFastForwardBadge"]()) {
-			this.searchCount := 0
-			sendKeyPress("M")
-			Sleep, 100
-			return [true, ""]
 		}
 		if (this.IsLoadingStarted && this.searchCount++ = 40) {
 			this.searchCount := 0
@@ -802,7 +829,7 @@ class StateMachine {
 				WinActivate Mortal Kombat 11
 				if (!WinActive("Mortal Kombat 11")) {
 					Process, Exist, MK11.exe
-					if (ErrorLevel != 0 && FileExist("MK11.lnk")) {
+					if (ErrorLevel = 0 && FileExist("MK11.lnk")) {
 						; Reset states
 						While (this.Pop()) {
 						}
