@@ -114,10 +114,10 @@ ScreenChecks["pressAnyBadge"] := new ScreenCheck("ImageKeys\PRESS ANY Badge.png"
 ScreenChecks["groupBattleBadge"] := new ScreenCheck("ImageKeys\GROUP BATTLE Badge.png", [860, 305, 1060, 320])
 ScreenChecks["aiToggleBadge"] := new ScreenCheck("ImageKeys\AI TOGGLE Badge.png", [300, 965, 410, 975])
 ScreenChecks["attackingTeamBadge"] := new ScreenCheck("ImageKeys\ATTACKING TEAM Badge.png", [195, 190, 420, 205])
-ScreenChecks["inMatchBadge1"] := new ScreenCheck("ImageKeys\IN MATCH Badge1.png", [1840, 1000, 1885, 1045], 60)
-ScreenChecks["inMatchBadge2"] := new ScreenCheck("ImageKeys\IN MATCH Badge2.png", [1840, 1000, 1885, 1045], 60)
-ScreenChecks["inMatchBadge3"] := new ScreenCheck("ImageKeys\IN MATCH Badge3.png", [1840, 1000, 1885, 1045], 60)
-ScreenChecks["inMatchBadge4"] := new ScreenCheck("ImageKeys\IN MATCH Badge4.png", [1840, 1000, 1885, 1045], 60)
+ScreenChecks["inMatchBadge1"] := new ScreenCheck("ImageKeys\IN MATCH Badge1.png", [1840, 1000, 1885, 1045])
+ScreenChecks["inMatchBadge2"] := new ScreenCheck("ImageKeys\IN MATCH Badge2.png", [1840, 1000, 1885, 1045])
+ScreenChecks["inMatchBadge3"] := new ScreenCheck("ImageKeys\IN MATCH Badge3.png", [1840, 1000, 1885, 1045])
+ScreenChecks["inMatchBadge4"] := new ScreenCheck("ImageKeys\IN MATCH Badge4.png", [1840, 1000, 1885, 1045])
 ScreenChecks["charSelectBadge"] := new ScreenCheck("ImageKeys\CHAR SELECT Badge.png", [250, 925, 275, 950], 10)
 ScreenChecks["findAiBattleHeader"] := new ScreenCheck("ImageKeys\FIND AI BATTLE Header.png", [280, 180, 395, 205])
 ScreenChecks["selectAiOpponentHeader"] := new ScreenCheck("ImageKeys\SELECT AI OPPONENT Header.png", [840, 105, 1050, 130])
@@ -213,7 +213,7 @@ class UnknownState extends State {
 			return [true, "inMatch"]
 		}
 		; match loss
-		if (ScreenChecks["retryButton1"]() || ScreenChecks["retryButton2"]() || ScreenChecks["towerSelectButton"]()) {
+		if (ScreenChecks["retryButton1"]() || ScreenChecks["towerSelectButton"]()) {
 			thrashKey := 0
 			return [true, "towerRun"]			
 		}
@@ -637,7 +637,7 @@ class TowerRunState extends State {
 			Sleep, 1500
 			return [false, ""]
 		}
-		isRetry := ScreenChecks["retryButton1"]() || ScreenChecks["retryButton2"]()
+		isRetry := ScreenChecks["retryButton1"]()
 		if (isRetry || ScreenChecks["towerSelectButton"]()) {
 			this.searchCount := 0
 			++this.numLosses
