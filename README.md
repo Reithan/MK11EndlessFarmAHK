@@ -30,7 +30,7 @@ Difficulties are:
 * VHard
 
 Additionally, character name, mode, and difficulty may be specified as "Random" to have the script randomly select each time it chooses. For a random build, set build # to 0.
-Outside of Random mode, the script will also attempt to ensure that you've hit yout 5/5 AI Battle attacks for the day before going to your selected mode.
+The script will also attempt to ensure that you've hit your 5/5 AI Battle attacks for the day before going to your selected mode.
 
 # Limitations
 This script currently operates at a 1920 x 1080 resolution on the primary monitor only.
