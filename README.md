@@ -33,7 +33,7 @@ Additionally, character name, mode, and difficulty may be specified as "Random" 
 The script will also attempt to ensure that you've hit your 5/5 AI Battle attacks for the day before going to your selected mode.
 
 # Limitations
-This script currently operates at a 1920 x 1080 resolution on the primary monitor only.
+This script currently operates at a 1920 x 1080 resolution, fullscreen or bordless, on the primary monitor only.
 
 As this script monitors the active MK11 window and gives inputs to it, you cannot use anything else in the meantime, this is only useful for fully AFK farming, or watching videos on your second monitor while it farms.
 
