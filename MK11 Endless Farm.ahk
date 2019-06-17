@@ -69,7 +69,7 @@ class ScreenCheck extends Functor
 	
 	Call(obj, params*)
 	{
-		CoordMode, Pixel, Relative
+		CoordMode, Pixel, Client
 		ImageSearch, OutputVarX, OutputVarY, this.screenCoords[1], this.screenCoords[2], this.screenCoords[3], this.screenCoords[4], % "*" . this.shadeRange . " HBITMAP:*" . this.pngHandle
 		if (ErrorLevel = 2) {
 			MsgBox % "ERROR: ImageSearch Failed(" . this.fileName . ")!"
@@ -888,8 +888,8 @@ class StateMachine {
 				}
 			}
 			
-			CoordMode, Pixel, Relative
 			; Get the mouse out of the way
+			CoordMode, Pixel, Client
 			MouseGetPos, mouseX, mouseY
 			if (mouseX != 1920 || mouseY != 1080) {
 				MouseMove, 1920, 1080, 0
